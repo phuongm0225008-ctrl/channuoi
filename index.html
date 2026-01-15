@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Dinh Dưỡng Chăn Nuôi - Tính Toán ME, CP & Phối Trộn Thức Ăn</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #0891b2 100%); }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+        .ingredient-row:hover { background-color: #f0fdf4; }
+        input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white py-8 shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-center gap-4 mb-4">
+                <svg class="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+                <h1 class="text-3xl md:text-4xl font-bold text-center">Công Cụ Dinh Dưỡng Chăn Nuôi</h1>
+            </div>
+            <p class="text-center text-green-100 text-lg">Tính toán ME, CP và phối trộn khẩu phần thức ăn chuyên nghiệp</p>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Tabs -->
+        <div class="flex flex-wrap gap-2 mb-6 justify-center">
+            <button onclick="showTab('ingredients')" id="tab-ingredients" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-emerald-600 text-white">
+                📋 Bảng Nguyên Liệu
+            </button>
+            <button onclick="showTab('calculator')" id="tab-calculator" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-700 hover:bg-gray-300">
+                🧮 Phối Trộn Khẩu Phần
+            </button>
+            <button onclick="showTab('requirements')" id="tab-requirements" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-700 hover:bg-gray-300">
+                📊 Nhu Cầu Dinh Dưỡng
+            </button>
+            <button onclick="showTab('formulas')" id="tab-formulas" class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-700 hover:bg-gray-300">
+                📐 Công Thức Tính
+            </button>
+        </div>
+
+        <!-- Tab 1: Bảng Nguyên Liệu -->
+        <div id="content-ingredients" class="tab-content">
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover transition-all">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <span class="text-3xl">🌾</span> Bảng Thành Phần Dinh Dưỡng Nguyên Liệu
+                </h2>
+                <p class="text-gray-600 mb-4">Giá trị tính trên 100% vật chất khô (DM)</p>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-emerald-600 text-white">
+                                <th class="px-3 py-3 text-left rounded-tl-lg">Nguyên Liệu</th>
+                                <th class="px-3 py-3 text-center">ME (kcal/kg)</th>
+                                <th class="px-3 py-3 text-center">CP (%)</th>
+                                <th class="px-3 py-3 text-center">CF (%)</th>
+                                <th class="px-3 py-3 text-center">EE (%)</th>
+                                <th class="px-3 py-3 text-center">Ca (%)</th>
+                                <th class="px-3 py-3 text-center">P (%)</th>
+                                <th class="px-3 py-3 text-center">Lys (%)</th>
+                                <th class="px-3 py-3 text-center">Met (%)</th>
+                                <th class="px-3 py-3 text-center rounded-tr-lg">Giá (đ/kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ingredientTable">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <h3 class="font-semibold text-blue-800 mb-2">📝 Chú thích:</h3>
+                    <div class="grid md:grid-cols-2 gap-2 text-sm text-blue-700">
+                        <div><strong>ME:</strong> Năng lượng trao đổi (Metabolizable Energy)</div>
+                        <div><strong>CP:</strong> Protein thô (Crude Protein)</div>
+                        <div><strong>CF:</strong> Xơ thô (Crude Fiber)</div>
+                        <div><strong>EE:</strong> Béo thô (Ether Extract)</div>
+                        <div><strong>Ca:</strong> Canxi</div>
+                        <div><strong>P:</strong> Phốt pho</div>
+                        <div><strong>Lys:</strong> Lysine</div>
+                        <div><strong>Met:</strong> Methionine</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Phối Trộn Khẩu Phần -->
+        <div id="content-calculator" class="tab-content hidden">
+            <div class="grid lg:grid-cols-2 gap-6">
+                <!-- Chọn nguyên liệu -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="text-3xl">⚖️</span> Phối Trộn Khẩu Phần
+                    </h2>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">Chọn loại vật nuôi:</label>
+                        <select id="animalType" onchange="updateRequirements()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                            <option value="broiler_starter">Gà thịt - Giai đoạn khởi động (0-21 ngày)</option>
+                            <option value="broiler_grower">Gà thịt - Giai đoạn tăng trưởng (22-42 ngày)</option>
+                            <option value="broiler_finisher">Gà thịt - Giai đoạn vỗ béo (>42 ngày)</option>
+                            <option value="layer">Gà đẻ trứng</option>
+                            <option value="pig_starter">Heo con (5-10kg)</option>
+                            <option value="pig_grower">Heo choai (10-30kg)</option>
+                            <option value="pig_finisher">Heo thịt (30-100kg)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4 p-3 bg-amber-50 rounded-lg">
+                        <p class="text-amber-800 font-medium" id="requirementInfo">
+                            Nhu cầu: ME 3000-3100 kcal/kg | CP 21-23% | Ca 0.9-1.0% | P 0.45%
+                        </p>
+                    </div>
+
+                    <div class="space-y-3" id="mixingInputs">
+                        <!-- Dynamic inputs will be generated here -->
+                    </div>
+
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="calculateMix()" class="flex-1 bg-emerald-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-emerald-700 transition-all">
+                            🧮 Tính Toán
+                        </button>
+                        <button onclick="resetMix()" class="bg-gray-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-600 transition-all">
+                            🔄
+                        </button>
+                    </div>
+
+                    <p id="totalPercent" class="mt-3 text-center font-semibold text-lg text-gray-700">Tổng: 0%</p>
+                </div>
+
+                <!-- Kết quả -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <span class="text-3xl">📊</span> Kết Quả Phối Trộn
+                    </h2>
+
+                    <div id="results" class="space-y-4">
+                        <div class="text-center text-gray-500 py-8">
+                            <p class="text-5xl mb-4">📋</p>
+                            <p>Nhập tỷ lệ nguyên liệu và nhấn "Tính Toán"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Nhu Cầu Dinh Dưỡng -->
+        <div id="content-requirements" class="tab-content hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <span class="text-3xl">📊</span> Bảng Nhu Cầu Dinh Dưỡng Theo Loại Vật Nuôi
+                </h2>
+
+                <!-- Gia cầm -->
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-emerald-700 mb-4 flex items-center gap-2">🐔 Gia Cầm</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-emerald-100">
+                                    <th class="px-4 py-3 text-left">Giai đoạn</th>
+                                    <th class="px-4 py-3 text-center">ME (kcal/kg)</th>
+                                    <th class="px-4 py-3 text-center">CP (%)</th>
+                                    <th class="px-4 py-3 text-center">CF (%)</th>
+                                    <th class="px-4 py-3 text-center">Ca (%)</th>
+                                    <th class="px-4 py-3 text-center">P (%)</th>
+                                    <th class="px-4 py-3 text-center">Lys (%)</th>
+                                    <th class="px-4 py-3 text-center">Met (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium">Gà thịt 0-21 ngày</td>
+                                    <td class="px-4 py-3 text-center">3000-3100</td>
+                                    <td class="px-4 py-3 text-center">21-23</td>
+                                    <td class="px-4 py-3 text-center">< 5</td>
+                                    <td class="px-4 py-3 text-center">0.9-1.0</td>
+                                    <td class="px-4 py-3 text-center">0.45</td>
+                                    <td class="px-4 py-3 text-center">1.20</td>
+                                    <td class="px-4 py-3 text-center">0.50</td>
+                                </tr>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium">Gà thịt 22-42 ngày</td>
+                                    <td class="px-4 py-3 text-center">3100-3200</td>
+                                    <td class="px-4 py-3 text-center">19-21</td>
+                                    <td class="px-4 py-3 text-center">< 5</td>
+                                    <td class="px-4 py-3 text-center">0.85-0.9</td>
+                                    <td class="px-4 py-3 text-center">0.42</td>
+                                    <td class="px-4 py-3 text-center">1.05</td>
+                                    <td class="px-4 py-3 text-center">0.45</td>
+                                </tr>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium">Gà thịt > 42 ngày</td>
+                                    <td class="px-4 py-3 text-center">3200-3300</td>
+                                    <td class="px-4 py-3 text-center">17-19</td>
+                                    <td class="px-4 py-3 text-center">< 6</td>
+                                    <td class="px-4 py-3 text-center">0.80-0.85</td>
+                                    <td class="px-4 py-3 text-center">0.38</td>
+                                    <td class="px-4 py-3 text-center">0.95</td>
+                                    <td class="px-4 py-3 text-center">0.40</td>
+                                </tr>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium">Gà đẻ trứng</td>
+                                    <td class="px-4 py-3 text-center">2750-2850</td>
+                                    <td class="px-4 py-3 text-center">16-18</td>
+                                    <td class="px-4 py-3 text-center">< 7</td>
+                                    <td class="px-4 py-3 text-center">3.5-4.0</td>
+                                    <td class="px-4 py-3 text-center">0.35</td>
+                                    <td class="px-4 py-3 text-center">0.75</td>
+                                    <td class="px-4 py-3 text-center">0.35</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Heo -->
+                <div>
+                    <h3 class="text-xl font-bold text-pink-700 mb-4 flex items-center gap-2">🐷 Heo</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-pink-100">
+                                    <th class="px-4 py-3 text-left">Giai đoạn</th>
+                                    <th class="px-4 py-3 text-center">DE (kcal/kg)</th>
+                                    <th class="px-4 py-3 text-center">CP (%)</th>
+                                    <th class="px-4 py-3 text-center">CF (%)</th>
+                                    <th class="px-4 py-3 text-center">Ca (%)</th>
+                                    <th class="px-4 py-3 text-center">P (%)</th>
+                                    <th class="px-4 py-3 text-center">Lys (%)</th>
+                                    <th class="px-4 py-3 text-center">Met+Cys (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium">Heo con (5-10kg)</td>
+                                    <td class="px-4 py-3 text-center">3400-3500</td>
+                                    <td class="px-4 py-3 text-center">22-24</td>
+                                    <td class="px-4 py-3 text-center">< 3</td>
+                                    <td class="px-4 py-3 text-center">0.80</td>
+                                    <td class="px-4 py-3 text-center">0.65</td>
+                                    <td class="px-4 py-3 text-center">1.35</td>
+                                    <td class="px-4 py-3 text-center">0.76</td>
+                                </tr>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium">Heo choai (10-30kg)</td>
+                                    <td class="px-4 py-3 text-center">3300-3400</td>
+                                    <td class="px-4 py-3 text-center">18-20</td>
+                                    <td class="px-4 py-3 text-center">< 5</td>
+                                    <td class="px-4 py-3 text-center">0.70</td>
+                                    <td class="px-4 py-3 text-center">0.55</td>
+                                    <td class="px-4 py-3 text-center">1.10</td>
+                                    <td class="px-4 py-3 text-center">0.62</td>
+                                </tr>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium">Heo thịt (30-60kg)</td>
+                                    <td class="px-4 py-3 text-center">3200-3300</td>
+                                    <td class="px-4 py-3 text-center">16-18</td>
+                                    <td class="px-4 py-3 text-center">< 6</td>
+                                    <td class="px-4 py-3 text-center">0.60</td>
+                                    <td class="px-4 py-3 text-center">0.50</td>
+                                    <td class="px-4 py-3 text-center">0.90</td>
+                                    <td class="px-4 py-3 text-center">0.54</td>
+                                </tr>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-3 font-medium">Heo thịt (60-100kg)</td>
+                                    <td class="px-4 py-3 text-center">3100-3200</td>
+                                    <td class="px-4 py-3 text-center">14-16</td>
+                                    <td class="px-4 py-3 text-center">< 7</td>
+                                    <td class="px-4 py-3 text-center">0.55</td>
+                                    <td class="px-4 py-3 text-center">0.45</td>
+                                    <td class="px-4 py-3 text-center">0.75</td>
+                                    <td class="px-4 py-3 text-center">0.46</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Công Thức Tính -->
+        <div id="content-formulas" class="tab-content hidden">
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Công thức ME -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-emerald-700 mb-4 flex items-center gap-2">
+                        ⚡ Công Thức Tính ME (Năng Lượng Trao Đổi)
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-100 rounded-lg">
+                            <p class="font-semibold text-gray-800 mb-2">Công thức Carpenter & Clegg (cho gia cầm):</p>
+                            <p class="text-emerald-700 font-mono bg-white p-3 rounded">
+                                ME = 37.98×CP + 84.75×EE + 28.75×NFE + 16.11×CF
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-gray-100 rounded-lg">
+                            <p class="font-semibold text-gray-800 mb-2">Công thức NRC (cho heo):</p>
+                            <p class="text-emerald-700 font-mono bg-white p-3 rounded">
+                                DE = 4151 - 122×CF + 23×CP + 38×EE - 64×Ash
+                            </p>
+                            <p class="text-emerald-700 font-mono bg-white p-3 rounded mt-2">
+                                ME = DE × 0.96 (hoặc DE - 0.68×CP)
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <p class="text-sm text-blue-700">
+                                <strong>Trong đó:</strong><br>
+                                NFE (Nitrogen Free Extract) = 100 - (Protein + Xơ + Béo + Tro + Ẩm)
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Công thức CP -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-blue-700 mb-4 flex items-center gap-2">
+                        🧬 Công Thức Tính CP (Protein Thô)
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-100 rounded-lg">
+                            <p class="font-semibold text-gray-800 mb-2">Phương pháp Kjeldahl:</p>
+                            <p class="text-blue-700 font-mono bg-white p-3 rounded">
+                                CP (%) = N (%) × 6.25
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-gray-100 rounded-lg">
+                            <p class="font-semibold text-gray-800 mb-2">CP của hỗn hợp:</p>
+                            <p class="text-blue-700 font-mono bg-white p-3 rounded">
+                                CP<sub>mix</sub> = Σ (CP<sub>i</sub> × %<sub>i</sub>) / 100
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-amber-50 rounded-lg">
+                            <p class="text-sm text-amber-700">
+                                <strong>Lưu ý:</strong> Hệ số 6.25 là hệ số chuyển đổi trung bình. Một số nguyên liệu có hệ số riêng (sữa: 6.38, lúa mì: 5.70).
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Công thức tỷ lệ Ca:P -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-orange-700 mb-4 flex items-center gap-2">
+                        🦴 Tỷ Lệ Ca:P Tối Ưu
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-100 rounded-lg">
+                            <p class="font-semibold text-gray-800 mb-2">Tỷ lệ khuyến nghị:</p>
+                            <ul class="space-y-2 text-gray-700">
+                                <li>• <strong>Gia cầm:</strong> Ca:P = 2:1 đến 2.5:1</li>
+                                <li>• <strong>Heo:</strong> Ca:P = 1.2:1 đến 1.5:1</li>
+                                <li>• <strong>Gà đẻ:</strong> Ca:P = 10:1 đến 12:1</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 bg-red-50 rounded-lg">
+                            <p class="text-sm text-red-700">
+                                <strong>Cảnh báo:</strong> Mất cân bằng Ca:P có thể gây còi xương, liệt chân, giảm năng suất.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tính giá thành -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-purple-700 mb-4 flex items-center gap-2">
+                        💰 Tính Giá Thành Thức Ăn
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-100 rounded-lg">
+                            <p class="font-semibold text-gray-800 mb-2">Giá 1kg thức ăn hỗn hợp:</p>
+                            <p class="text-purple-700 font-mono bg-white p-3 rounded">
+                                Giá = Σ (Giá<sub>i</sub> × %<sub>i</sub>) / 100
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-gray-100 rounded-lg">
+                            <p class="font-semibold text-gray-800 mb-2">Chi phí/đơn vị năng lượng:</p>
+                            <p class="text-purple-700 font-mono bg-white p-3 rounded">
+                                Đ/kcal ME = Giá (đ/kg) / ME (kcal/kg)
+                            </p>
+                        </div>
+
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <p class="text-sm text-green-700">
+                                <strong>Mẹo:</strong> So sánh chi phí/kcal ME giúp đánh giá hiệu quả kinh tế của công thức.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-8">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gray-400">© 2024 Công Cụ Dinh Dưỡng Chăn Nuôi | Dữ liệu tham khảo từ NRC, INRA</p>
+            <p class="text-gray-500 text-sm mt-2">Lưu ý: Các giá trị dinh dưỡng có thể thay đổi tùy theo nguồn gốc và chất lượng nguyên liệu</p>
+        </div>
+    </footer>
+
+    <script>
+        // Dữ liệu nguyên liệu thức ăn chăn nuôi
+        const ingredients = [
+            { id: 'corn', name: 'Ngô hạt', ME: 3350, CP: 8.5, CF: 2.2, EE: 3.8, Ca: 0.02, P: 0.28, Lys: 0.26, Met: 0.18, price: 8500, category: 'energy' },
+            { id: 'rice_bran', name: 'Cám gạo', ME: 2980, CP: 13.0, CF: 8.5, EE: 14.0, Ca: 0.07, P: 1.50, Lys: 0.55, Met: 0.25, price: 7500, category: 'energy' },
+            { id: 'broken_rice', name: 'Tấm', ME: 3400, CP: 8.0, CF: 0.8, EE: 1.5, Ca: 0.02, P: 0.16, Lys: 0.30, Met: 0.15, price: 9000, category: 'energy' },
+            { id: 'cassava', name: 'Bột sắn', ME: 3200, CP: 2.5, CF: 3.5, EE: 0.5, Ca: 0.12, P: 0.10, Lys: 0.08, Met: 0.03, price: 6500, category: 'energy' },
+            { id: 'wheat', name: 'Lúa mì', ME: 3150, CP: 12.5, CF: 2.8, EE: 1.8, Ca: 0.04, P: 0.35, Lys: 0.36, Met: 0.20, price: 9500, category: 'energy' },
+            { id: 'sbm', name: 'Khô đậu nành 44%', ME: 2440, CP: 44.0, CF: 6.5, EE: 1.5, Ca: 0.30, P: 0.65, Lys: 2.80, Met: 0.65, price: 14500, category: 'protein' },
+            { id: 'sbm48', name: 'Khô đậu nành 48%', ME: 2550, CP: 48.0, CF: 3.5, EE: 1.0, Ca: 0.32, P: 0.68, Lys: 3.02, Met: 0.70, price: 15500, category: 'protein' },
+            { id: 'fish_meal_60', name: 'Bột cá 60%', ME: 2850, CP: 60.0, CF: 1.0, EE: 9.0, Ca: 5.50, P: 2.80, Lys: 4.80, Met: 1.80, price: 28000, category: 'protein' },
+            { id: 'fish_meal_65', name: 'Bột cá 65%', ME: 2950, CP: 65.0, CF: 0.8, EE: 8.0, Ca: 4.80, P: 2.50, Lys: 5.20, Met: 1.95, price: 32000, category: 'protein' },
+            { id: 'meat_bone', name: 'Bột thịt xương', ME: 2200, CP: 50.0, CF: 2.5, EE: 10.0, Ca: 10.0, P: 5.00, Lys: 2.60, Met: 0.70, price: 18000, category: 'protein' },
+            { id: 'peanut_meal', name: 'Khô dầu lạc', ME: 2400, CP: 45.0, CF: 12.0, EE: 1.5, Ca: 0.18, P: 0.60, Lys: 1.65, Met: 0.45, price: 12000, category: 'protein' },
+            { id: 'copra_meal', name: 'Khô dầu dừa', ME: 2100, CP: 21.0, CF: 13.0, EE: 2.0, Ca: 0.08, P: 0.55, Lys: 0.63, Met: 0.30, price: 8000, category: 'protein' },
+            { id: 'limestone', name: 'Bite đá vôi', ME: 0, CP: 0, CF: 0, EE: 0, Ca: 38.0, P: 0.02, Lys: 0, Met: 0, price: 2000, category: 'mineral' },
+            { id: 'dcp', name: 'DCP (Dicalcium Phosphate)', ME: 0, CP: 0, CF: 0, EE: 0, Ca: 22.0, P: 18.0, Lys: 0, Met: 0, price: 15000, category: 'mineral' },
+            { id: 'mcp', name: 'MCP (Monocalcium Phosphate)', ME: 0, CP: 0, CF: 0, EE: 0, Ca: 16.0, P: 21.0, Lys: 0, Met: 0, price: 18000, category: 'mineral' },
+            { id: 'salt', name: 'Muối (NaCl)', ME: 0, CP: 0, CF: 0, EE: 0, Ca: 0, P: 0, Lys: 0, Met: 0, price: 3500, category: 'mineral' },
+            { id: 'lysine', name: 'L-Lysine HCl 98%', ME: 0, CP: 0, CF: 0, EE: 0, Ca: 0, P: 0, Lys: 78.0, Met: 0, price: 45000, category: 'amino' },
+            { id: 'methionine', name: 'DL-Methionine 99%', ME: 0, CP: 0, CF: 0, EE: 0, Ca: 0, P: 0, Lys: 0, Met: 99.0, price: 85000, category: 'amino' },
+            { id: 'threonine', name: 'L-Threonine 98%', ME: 0, CP: 0, CF: 0, EE: 0, Ca: 0, P: 0, Lys: 0, Met: 0, price: 50000, category: 'amino' },
+            { id: 'oil', name: 'Dầu thực vật', ME: 8800, CP: 0, CF: 0, EE: 99.0, Ca: 0, P: 0, Lys: 0, Met: 0, price: 25000, category: 'energy' },
+            { id: 'premix', name: 'Premix vitamin-khoáng', ME: 0, CP: 0, CF: 0, EE: 0, Ca: 0, P: 0, Lys: 0, Met: 0, price: 65000, category: 'premix' }
+        ];
+
+        // Nhu cầu dinh dưỡng theo loại vật nuôi
+        const requirements = {
+            broiler_starter: { ME: { min: 3000, max: 3100 }, CP: { min: 21, max: 23 }, CF: { max: 5 }, Ca: { min: 0.9, max: 1.0 }, P: { min: 0.45, max: 0.50 }, Lys: 1.20, Met: 0.50 },
+            broiler_grower: { ME: { min: 3100, max: 3200 }, CP: { min: 19, max: 21 }, CF: { max: 5 }, Ca: { min: 0.85, max: 0.90 }, P: { min: 0.42, max: 0.45 }, Lys: 1.05, Met: 0.45 },
+            broiler_finisher: { ME: { min: 3200, max: 3300 }, CP: { min: 17, max: 19 }, CF: { max: 6 }, Ca: { min: 0.80, max: 0.85 }, P: { min: 0.38, max: 0.42 }, Lys: 0.95, Met: 0.40 },
+            layer: { ME: { min: 2750, max: 2850 }, CP: { min: 16, max: 18 }, CF: { max: 7 }, Ca: { min: 3.5, max: 4.0 }, P: { min: 0.35, max: 0.40 }, Lys: 0.75, Met: 0.35 },
+            pig_starter: { ME: { min: 3400, max: 3500 }, CP: { min: 22, max: 24 }, CF: { max: 3 }, Ca: { min: 0.75, max: 0.85 }, P: { min: 0.60, max: 0.70 }, Lys: 1.35, Met: 0.38 },
+            pig_grower: { ME: { min: 3300, max: 3400 }, CP: { min: 18, max: 20 }, CF: { max: 5 }, Ca: { min: 0.65, max: 0.75 }, P: { min: 0.50, max: 0.60 }, Lys: 1.10, Met: 0.31 },
+            pig_finisher: { ME: { min: 3100, max: 3200 }, CP: { min: 14, max: 16 }, CF: { max: 7 }, Ca: { min: 0.50, max: 0.60 }, P: { min: 0.40, max: 0.50 }, Lys: 0.75, Met: 0.23 }
+        };
+
+        // Hiển thị bảng nguyên liệu
+        function renderIngredientTable() {
+            const tbody = document.getElementById('ingredientTable');
+            const categories = {
+                'energy': { name: 'Nguyên liệu năng lượng', color: 'bg-yellow-50' },
+                'protein': { name: 'Nguyên liệu protein', color: 'bg-green-50' },
+                'mineral': { name: 'Khoáng chất', color: 'bg-blue-50' },
+                'amino': { name: 'Axit amin', color: 'bg-purple-50' },
+                'premix': { name: 'Premix', color: 'bg-orange-50' }
+            };
+
+            let currentCategory = '';
+            let html = '';
+
+            ingredients.forEach(ing => {
+                if (ing.category !== currentCategory) {
+                    currentCategory = ing.category;
+                    html += `<tr class="${categories[currentCategory].color}">
+                        <td colspan="10" class="px-3 py-2 font-bold text-gray-700">${categories[currentCategory].name}</td>
+                    </tr>`;
+                }
+                html += `
+                    <tr class="border-b ingredient-row transition-colors">
+                        <td class="px-3 py-2 font-medium">${ing.name}</td>
+                        <td class="px-3 py-2 text-center">${ing.ME || '-'}</td>
+                        <td class="px-3 py-2 text-center">${ing.CP || '-'}</td>
+                        <td class="px-3 py-2 text-center">${ing.CF || '-'}</td>
+                        <td class="px-3 py-2 text-center">${ing.EE || '-'}</td>
+                        <td class="px-3 py-2 text-center">${ing.Ca || '-'}</td>
+                        <td class="px-3 py-2 text-center">${ing.P || '-'}</td>
+                        <td class="px-3 py-2 text-center">${ing.Lys || '-'}</td>
+                        <td class="px-3 py-2 text-center">${ing.Met || '-'}</td>
+                        <td class="px-3 py-2 text-center text-emerald-600 font-medium">${ing.price.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // Tạo input phối trộn
+        function renderMixingInputs() {
+            const container = document.getElementById('mixingInputs');
+            let html = '<div class="grid gap-2 max-h-96 overflow-y-auto pr-2">';
+
+            ingredients.forEach(ing => {
+                html += `
+                    <div class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                        <label class="flex-1 text-sm font-medium text-gray-700">${ing.name}</label>
+                        <input type="number" id="mix_${ing.id}" 
+                            class="w-20 p-2 border border-gray-300 rounded text-center text-sm focus:ring-2 focus:ring-emerald-500" 
+                            min="0" max="100" step="0.1" value="0" onchange="updateTotal()">
+                        <span class="text-gray-500 text-sm">%</span>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Cập nhật tổng %
+        function updateTotal() {
+            let total = 0;
+            ingredients.forEach(ing => {
+                const val = parseFloat(document.getElementById(`mix_${ing.id}`).value) || 0;
+                total += val;
+            });
+
+            const totalEl = document.getElementById('totalPercent');
+            totalEl.textContent = `Tổng: ${total.toFixed(1)}%`;
+
+            if (Math.abs(total - 100) < 0.1) {
+                totalEl.className = 'mt-3 text-center font-semibold text-lg text-green-600';
+            } else if (total > 100) {
+                totalEl.className = 'mt-3 text-center font-semibold text-lg text-red-600';
+            } else {
+                totalEl.className = 'mt-3 text-center font-semibold text-lg text-amber-600';
+            }
+        }
+
+        // Tính toán phối trộn
+        function calculateMix() {
+            let total = 0;
+            let results = { ME: 0, CP: 0, CF: 0, EE: 0, Ca: 0, P: 0, Lys: 0, Met: 0, price: 0 };
+
+            ingredients.forEach(ing => {
+                const percent = parseFloat(document.getElementById(`mix_${ing.id}`).value) || 0;
+                total += percent;
+
+                results.ME += (ing.ME * percent) / 100;
+                results.CP += (ing.CP * percent) / 100;
+                results.CF += (ing.CF * percent) / 100;
+                results.EE += (ing.EE * percent) / 100;
+                results.Ca += (ing.Ca * percent) / 100;
+                results.P += (ing.P * percent) / 100;
+                results.Lys += (ing.Lys * percent) / 100;
+                results.Met += (ing.Met * percent) / 100;
+                results.price += (ing.price * percent) / 100;
+            });
+
+            if (total < 99.9 || total > 100.1) {
+                alert(`Tổng tỷ lệ phải bằng 100%! Hiện tại: ${total.toFixed(1)}%`);
+                return;
+            }
+
+            const animalType = document.getElementById('animalType').value;
+            const req = requirements[animalType];
+
+            // Hiển thị kết quả
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="grid grid-cols-2 gap-3">
+                    ${createResultCard('ME', results.ME.toFixed(0), 'kcal/kg', req.ME, '⚡')}
+                    ${createResultCard('CP', results.CP.toFixed(2), '%', req.CP, '🧬')}
+                    ${createResultCard('CF', results.CF.toFixed(2), '%', { max: req.CF.max }, '🌾')}
+                    ${createResultCard('EE', results.EE.toFixed(2), '%', null, '🛢️')}
+                    ${createResultCard('Ca', results.Ca.toFixed(2), '%', req.Ca, '🦴')}
+                    ${createResultCard('P', results.P.toFixed(2), '%', req.P, '🔬')}
+                    ${createResultCard('Lysine', results.Lys.toFixed(3), '%', { min: req.Lys }, '🔷')}
+                    ${createResultCard('Methionine', results.Met.toFixed(3), '%', { min: req.Met }, '🔶')}
+                </div>
+
+                <div class="mt-4 p-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl text-white">
+                    <div class="flex justify-between items-center">
+                        <span class="text-lg font-semibold">💰 Giá thành 1kg thức ăn:</span>
+                        <span class="text-2xl font-bold">${results.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} đ</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2 text-emerald-100">
+                        <span>Chi phí/1000 kcal ME:</span>
+                        <span class="font-medium">${(results.price / results.ME * 1000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')} đ</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-1 text-emerald-100">
+                        <span>Tỷ lệ Ca:P:</span>
+                        <span class="font-medium">${(results.Ca / results.P).toFixed(2)} : 1</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Tạo card kết quả
+        function createResultCard(name, value, unit, requirement, icon) {
+            let status = 'bg-gray-100';
+            let statusText = '';
+
+            if (requirement) {
+                const numValue = parseFloat(value);
+                if (requirement.min !== undefined && requirement.max !== undefined) {
+                    if (numValue >= requirement.min && numValue <= requirement.max) {
+                        status = 'bg-green-100 border-green-300';
+                        statusText = '✓';
+                    } else if (numValue < requirement.min) {
+                        status = 'bg-red-100 border-red-300';
+                        statusText = '↓ Thấp';
+                    } else {
+                        status = 'bg-amber-100 border-amber-300';
+                        statusText = '↑ Cao';
+                    }
+                } else if (requirement.min !== undefined) {
+                    if (numValue >= requirement.min) {
+                        status = 'bg-green-100 border-green-300';
+                        statusText = '✓';
+                    } else {
+                        status = 'bg-red-100 border-red-300';
+                        statusText = '↓ Thấp';
+                    }
+                } else if (requirement.max !== undefined) {
+                    if (numValue <= requirement.max) {
+                        status = 'bg-green-100 border-green-300';
+                        statusText = '✓';
+                    } else {
+                        status = 'bg-red-100 border-red-300';
+                        statusText = '↑ Cao';
+                    }
+                }
+            }
+
+            return `
+                <div class="p-3 ${status} rounded-lg border">
+                    <div class="flex items-center justify-between">
+                        <span class="text-2xl">${icon}</span>
+                        <span class="text-xs font-medium ${statusText === '✓' ? 'text-green-600' : statusText.includes('Thấp') ? 'text-red-600' : statusText.includes('Cao') ? 'text-amber-600' : ''}">${statusText}</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mt-1">${name}</p>
+                    <p class="text-xl font-bold text-gray-800">${value} <span class="text-sm font-normal">${unit}</span></p>
+                </div>
+            `;
+        }
+
+        // Reset phối trộn
+        function resetMix() {
+            ingredients.forEach(ing => {
+                document.getElementById(`mix_${ing.id}`).value = 0;
+            });
+            updateTotal();
+            document.getElementById('results').innerHTML = `
+                <div class="text-center text-gray-500 py-8">
+                    <p class="text-5xl mb-4">📋</p>
+                    <p>Nhập tỷ lệ nguyên liệu và nhấn "Tính Toán"</p>
+                </div>
+            `;
+        }
+
+        // Cập nhật thông tin nhu cầu
+        function updateRequirements() {
+            const type = document.getElementById('animalType').value;
+            const req = requirements[type];
+            const info = document.getElementById('requirementInfo');
+            info.textContent = `Nhu cầu: ME ${req.ME.min}-${req.ME.max} kcal/kg | CP ${req.CP.min}-${req.CP.max}% | Ca ${req.Ca.min}-${req.Ca.max}% | P ${req.P.min}-${req.P.max}%`;
+        }
+
+        // Chuyển tab
+        function showTab(tabName) {
+            // Ẩn tất cả content
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Hiện tab được chọn
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+
+            // Cập nhật style các nút
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-gray-200 text-gray-700 hover:bg-gray-300';
+            });
+            document.getElementById(`tab-${tabName}`).className = 'tab-btn px-6 py-3 rounded-lg font-semibold transition-all bg-emerald-600 text-white';
+        }
+
+        // Khởi tạo
+        document.addEventListener('DOMContentLoaded', () => {
+            renderIngredientTable();
+            renderMixingInputs();
+            updateRequirements();
+        });
+    </script>
+</body>
+</html>
